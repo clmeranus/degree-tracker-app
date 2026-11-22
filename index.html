@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#b31b1b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Degree">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Degree Tracker · Class of 2030</title>
+<style>
+  :root{
+    --bg:#f6f4f1; --card:#fff; --ink:#1f1d1b; --muted:#6f6a64; --line:#e6e1da;
+    --red:#b31b1b; --done:#2f7d4f; --ip:#d48a1c; --plan:#4a74b8; --none:#d9d4cd;
+    --done-bg:#e7f3eb; --ip-bg:#fbf0dd; --plan-bg:#e6edf8; --warn:#b3471b;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif}
+  header{background:var(--red);color:#fff;padding:22px 28px 0}
+  header h1{margin:0;font-size:22px;letter-spacing:.2px}
+  header .sub{opacity:.85;font-size:13px;margin-top:2px}
+  nav{display:flex;gap:4px;margin-top:16px}
+  nav button{background:transparent;border:0;color:#fff;opacity:.75;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;border-radius:8px 8px 0 0}
+  nav button.on{background:var(--bg);color:var(--red);opacity:1}
+  main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 16px}
+  .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+  .rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px;margin-bottom:22px}
+  .ringcard{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;gap:16px;align-items:center;cursor:pointer;transition:box-shadow .15s}
+  .ringcard:hover{box-shadow:0 4px 14px rgba(0,0,0,.06)}
+  .ringcard h3{margin:0 0 4px;font-size:15px}
+  .ringcol{display:flex;flex-direction:column;align-items:center;gap:8px;flex:0 0 auto}
+  .rbreak{display:flex;flex-direction:column;gap:2px;font-size:12px;color:var(--muted);white-space:nowrap}
+  .rb i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:0}
+  .rb b{color:var(--ink)}
+  .ringcard .meta{font-size:12.5px;color:var(--muted)}
+  .ringcard .big{font-size:12.5px;margin-top:6px}
+  .pace{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:22px}
+  .pace h3{margin:0 0 10px;font-size:15px}
+  .bar{position:relative;height:14px;background:var(--none);border-radius:7px;overflow:hidden;display:flex}
+  .bar span{height:100%}
+  .bar.small{height:8px;border-radius:4px}
+  .marker{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+  .semtick{position:absolute;top:-3px;bottom:-3px;width:1.5px;background:var(--ink);opacity:.55;transform:translateX(-50%)}
+  .marker.now{width:3px;top:-6px;bottom:-6px;background:var(--red);opacity:1;transform:translateX(-50%)}
+  .semlabels{position:relative;height:16px;margin-top:6px;font-size:11px;color:var(--muted)}
+  .semlabels span{position:absolute;transform:translateX(-50%);white-space:nowrap}
+  .semlabels span.cur{color:var(--red);font-weight:700}
+  .semlabels span.future{opacity:.55}
+  .semlabels span.ap{font-size:10px}
+  .semtick.future{opacity:.25}
+  .paceline{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin-top:8px;gap:12px;flex-wrap:wrap}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 18px 12px;scroll-margin-top:12px}
+  .card h2{margin:0;font-size:17px}
+  .card .note{font-size:12.5px;color:var(--muted);margin:4px 0 12px}
+  .card h4{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:14px 0 6px}
+  .row{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid #f0ece6}
+  .row:first-of-type{border-top:0}
+  .dot{flex:0 0 20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:700;color:#fff;margin-top:1px}
+  .dot.done{background:var(--done)} .dot.ip{background:var(--ip)} .dot.plan{background:var(--plan)} .dot.none{background:#fff;border:2px solid var(--none)}
+  .row .lbl{flex:1;min-width:0}
+  .row .lbl b{font-weight:600}
+  .row .opts{font-size:12px;color:var(--muted)}
+  .pill{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+  .pill.done{background:var(--done-bg);color:var(--done)} .pill.ip{background:var(--ip-bg);color:#9a6210} .pill.plan{background:var(--plan-bg);color:var(--plan)} .pill.none{background:#f1eee9;color:var(--muted)}
+  .meter{padding:8px 0;border-top:1px solid #f0ece6}
+  .meter .top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:5px}
+  .meter .top>span:last-child{white-space:nowrap;text-align:right}
+  .warn{background:#fdf0ea;border:1px solid #f1cdbb;color:var(--warn);border-radius:10px;padding:8px 12px;font-size:13px;margin:8px 0}
+  .info{background:#f4f1ec;border-radius:10px;padding:8px 12px;font-size:12.5px;color:var(--muted);margin:10px 0 4px}
+  .distgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:13px}
+  .distgrid div{display:flex;gap:6px;align-items:center}
+  .sq{width:12px;height:12px;border-radius:3px;flex:0 0 12px}
+  /* courses tab */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  button.btn{font:inherit;font-size:14px;padding:8px 14px;border-radius:9px;border:1px solid var(--line);background:#fff;cursor:pointer}
+  button.btn.primary{background:var(--red);color:#fff;border-color:var(--red);font-weight:600}
+  button.btn:hover{filter:brightness(.97)}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid #f0ece6;vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);background:#faf8f5}
+  td .tags{display:flex;gap:4px;flex-wrap:wrap}
+  td .tag{font-size:11px;background:#f1eee9;border-radius:5px;padding:1px 6px;color:#4d4842}
+  td.act{white-space:nowrap;text-align:right}
+  td.act button{border:0;background:none;color:var(--plan);cursor:pointer;font:inherit;font-size:13px;padding:2px 6px}
+  td.act button.del{color:var(--warn)}
+  .cal-ap{margin-bottom:18px}
+  .cal-year{display:grid;grid-template-columns:120px repeat(var(--cols),minmax(0,1fr));gap:12px;margin-bottom:14px;align-items:stretch}
+  .cal-ylabel{font-weight:700;color:var(--red);font-size:14px;padding-top:12px}
+  .cal-ylabel span{display:block;font-weight:400;color:var(--muted);font-size:12px}
+  .sem{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px;min-height:110px;display:flex;flex-direction:column;gap:8px}
+  .sem.now{border-color:var(--red);box-shadow:0 0 0 2px rgba(179,27,27,.12)}
+  .sem.ap{background:#faf8f5}
+  .sem-h{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:700}
+  .sem-h .cr{font-weight:400;color:var(--muted);font-size:12px}
+  .sem-empty{font-size:12.5px;color:var(--muted);margin:auto 0;text-align:center}
+  .ccard{border:1px solid #efeae3;border-left:4px solid var(--none);border-radius:8px;padding:7px 9px;background:#fff}
+  .ccard.done{border-left-color:var(--done)} .ccard.ip{border-left-color:var(--ip)} .ccard.plan{border-left-color:var(--plan)}
+  .ccard .top{display:flex;justify-content:space-between;gap:6px;align-items:center}
+  .ccard .code{font-weight:700;font-size:13.5px}
+  .ccard .t{font-size:12px;color:var(--muted);margin:1px 0 4px}
+  .ccard .meta{font-size:12px;margin-bottom:4px}
+  .ccard .tags{display:flex;gap:3px;flex-wrap:wrap}
+  .ccard .tag{font-size:10.5px;background:#f1eee9;border-radius:5px;padding:1px 5px;color:#4d4842}
+  .ccard .tag.prog{background:#f7e3e3;color:var(--red);font-weight:600}
+  .sg-group{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .sg-group h3{margin:0 0 2px;font-size:15px}
+  .sg-group .note{margin:0 0 10px}
+  .sg-req{margin:10px 0 4px;font-size:13px;font-weight:700;color:var(--red)}
+  .sg-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+  .sg{border:1px dashed #d8d1c7;border-radius:9px;padding:8px 10px;background:#fcfbf9}
+  .sg.multi{border:1.5px solid var(--done);background:#f4faf6}
+  .sg .code{font-weight:700;font-size:13.5px}
+  .sg .t{font-size:12.5px;color:var(--muted)}
+  .sg .n{font-size:12px;margin-top:4px}
+  .sg .tags{display:flex;gap:3px;flex-wrap:wrap;margin-top:5px}
+  .sg .tag{font-size:10.5px;border-radius:5px;padding:1px 6px;background:#f1eee9;color:#4d4842}
+  .sg .tag.hit{background:#e7f3eb;color:var(--done);font-weight:600}
+  .sg-banner{background:#fbf0dd;border:1px solid #efd9b0;border-radius:12px;padding:10px 14px;font-size:13px;margin-bottom:14px}
+  .sg-add{display:flex;gap:6px;margin-top:8px;align-items:center}
+  .sg-add select{font-size:12.5px;padding:4px 6px;flex:1;min-width:0}
+  .btn.small{font-size:12.5px;padding:5px 10px;background:var(--red);color:#fff;border-color:var(--red);font-weight:600;white-space:nowrap}
+  .ccard .rm{margin-top:6px;border:0;background:none;color:var(--warn);font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:underline}
+  .ccard .tag.local{background:#fbf0dd;color:#9a6210;font-weight:600}
+  .gh{border-radius:12px;padding:10px 14px;margin-bottom:12px;font-size:13.5px;display:grid;gap:8px;border:1px solid var(--line);background:#fff}
+  .gh.synced{background:var(--done-bg);border-color:#bcdcc7}
+  .gh.saving,.gh.loading{background:var(--plan-bg);border-color:#c6d4ee}
+  .gh.error{background:#fdf0ea;border-color:#f1cdbb;color:var(--warn)}
+  .gh-bottom{margin-top:18px}
+  .gh-row{display:flex;gap:8px;flex-wrap:wrap}
+  .gh-row input{flex:1;min-width:220px}
+  .pending{background:#fbf0dd;border:1px solid #efd9b0;border-radius:12px;padding:12px 14px;margin-bottom:16px;font-size:13.5px;display:grid;gap:10px}
+  .pending-btns{display:flex;gap:8px;flex-wrap:wrap}
+  .pending textarea{width:100%;min-height:70px;font:12px/1.4 ui-monospace,Menlo,monospace;border:1px solid #efd9b0;border-radius:8px;padding:8px;background:#fff;resize:vertical}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:10px 16px;border-radius:10px;font-size:13.5px;opacity:0;transition:.25s;pointer-events:none;z-index:9}
+  #toast.show{opacity:1;transform:translateX(-50%)}
+  .ap-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px}
+  @media (max-width:800px){.cal-year{grid-template-columns:1fr}.cal-ylabel{padding-top:0}}
+  dialog{border:0;border-radius:16px;padding:0;width:min(640px,94vw);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+  dialog::backdrop{background:rgba(30,20,15,.35)}
+  form.f{padding:22px}
+  form.f h3{margin:0 0 14px}
+  .fg{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+  .fg label{font-size:12.5px;color:var(--muted);display:flex;flex-direction:column;gap:4px}
+  .fg .full{grid-column:1/-1}
+  input,select{font:inherit;font-size:14px;padding:7px 9px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
+  .checks{display:grid;grid-template-columns:repeat(2,1fr);gap:4px 12px;font-size:13px}
+  .checks label{flex-direction:row;align-items:center;gap:6px;color:var(--ink)}
+  fieldset{border:1px solid var(--line);border-radius:10px;padding:8px 12px 10px;margin:0}
+  legend{font-size:12px;color:var(--muted);padding:0 4px}
+  .f .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .hint{font-size:12px;color:var(--muted)}
+  .hidden{display:none}
+  .nextlist li{margin:4px 0}
+  .src a{color:var(--plan)}
+  header{padding-top:calc(22px + env(safe-area-inset-top))}
+  @media (max-width:600px){
+    header{padding:calc(14px + env(safe-area-inset-top)) 14px 0}
+    header h1{font-size:19px} header .sub{font-size:11.5px}
+    nav{overflow-x:auto;gap:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+    nav button{padding:9px 11px;font-size:14px;white-space:nowrap}
+    main{padding:16px 12px calc(40px + env(safe-area-inset-bottom))}
+    .rings{grid-template-columns:1fr 1fr;gap:10px}
+    .ringcard{flex-direction:column;align-items:flex-start;padding:12px;gap:8px}
+    .grid{grid-template-columns:1fr}
+    .card{padding:14px 14px 10px}
+    .semlabels{font-size:9.5px}
+    .paceline{flex-direction:column;gap:4px}
+    .sg-list{grid-template-columns:1fr}
+  }
+  @media (max-width:600px){.fg,.checks,.distgrid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Degree Tracker</h1>
+  <div class="sub">College of Arts &amp; Sciences · Class of 2030 · Economics major · Business minor · Fashion Studies minor</div>
+  <nav>
+    <button data-tab="dash" class="on">Progress</button>
+    <button data-tab="courses">My courses</button>
+    <button data-tab="suggest">Suggestions</button>
+    <button data-tab="about">Rules &amp; sources</button>
+  </nav>
+</header>
+
+<main>
+  <!-- DASHBOARD -->
+  <section id="tab-dash">
+    <div id="connectTop"></div>
+    <div class="legend">
+      <span><i style="background:var(--done)"></i>Completed</span>
+      <span><i style="background:var(--ip)"></i>In progress</span>
+      <span><i style="background:var(--plan)"></i>Planned</span>
+      <span><i style="background:var(--none)"></i>Still needed</span>
+    </div>
+    <div class="rings" id="rings"></div>
+    <div class="pace" id="pace"></div>
+    <div class="grid" id="cards"></div>
+    <div class="card" style="margin-top:16px" id="next"></div>
+  </section>
+
+  <!-- COURSES -->
+  <section id="tab-courses" class="hidden">
+    <div class="info" id="dataInfo" style="margin:0 0 14px"></div>
+    <div id="courseTable"></div>
+    <p class="hint">Add planned courses from the Suggestions tab, or remove planned ones here. To add anything else or record grades, tell Claude, who updates <code>courses.js</code> in your GitHub repo.</p>
+  </section>
+
+  <!-- SUGGESTIONS (display only: never feeds the progress calculations) -->
+  <section id="tab-suggest" class="hidden"><div id="suggest"></div></section>
+
+  <!-- ABOUT -->
+  <section id="tab-about" class="hidden">
+    <div class="card src" id="about"></div>
+  </section>
+</main>
+
+
+<script src="courses.js"></script>
+<script src="suggestions.js"></script>
+<script>
+/* ============================================================
+   DATA: requirement definitions (sources in the "Rules & sources" tab)
+   ============================================================ */
+const DIST = [
+  ['ALC','Arts, Literature & Culture'],['BIO','Biological Sciences'],['ETM','Ethics & the Mind'],
+  ['GLC','Global Citizenship'],['HST','Historical Analysis'],['PHS','Physical Sciences'],
+  ['SCD','Social Difference'],['SSC','Social Sciences'],['SDS','Statistics & Data Science'],
+  ['SMR','Symbolic & Mathematical Reasoning']
+];
+// Known courses for autocomplete: [code, title, credits]
+const KNOWN = [
+  ['ECON 1110','Introductory Microeconomics',3],['ECON 1120','Introductory Macroeconomics',3],
+  ['ECON 3030','Intermediate Microeconomic Theory',4],['ECON 3040','Intermediate Macroeconomic Theory',4],
+  ['ECON 3110','Applied Probability and Statistics',4],['ECON 3130','Probability and Statistics',4],
+  ['ECON 3120','Applied Econometrics',4],['ECON 3140','Econometrics',4],
+  ['MATH 1110','Calculus I',4],['MATH 1120','Calculus II',4],
+  ['AEM 2100','Introductory Statistics',null],['STSCI 2100','Introductory Statistics and Data Science',null],
+  ['STSCI 2200','Statistics I',null],['ILRST 2100','Introductory Statistics and Data Science',null],
+  ['PUBPOL 2101','Statistics for Public Policy',null],['PSYCH 2500','Statistics and Research Design',null],
+  ['AEM 1200','Introduction to Business Management',3],['HADM 1810','Introduction to Management',3],
+  ['ILRID 1700','Introduction to Organizations and Management',3],
+  ['AEM 2400','Marketing',3],['HADM 2410','Marketing Principles',3],
+  ['AEM 2210','Financial Accounting',3],['HADM 2230','Financial Accounting Principles',3],
+  ['AEM 2241','Finance',3],['HADM 2250','Finance',3],
+  ['FSAD 1250','Fashion, Art and Design Thinking',3]
+];
+const NON_AS_PREFIX = ['AEM','HADM','NCC','NBA','FSAD','DEA','HD','NS','PUBPOL','HE','ILRID','ILRST','ILRLR','ILRHR','ILROB','ILRIC','ILRLE','ILRGL','CRP','CEE','ENGRD','BTRY','STSCI','AIIS','ANSC','PLSCI','NTRES','DSOC','COMM','DESIGN','ARCH','ENGRI','ORIE','INFO'];
+// Note: some of these (e.g., INFO, STSCI) are cross-college — the "A&S credit" box stays editable.
+
+const GR = {'A+':13,'A':12,'A-':11,'B+':10,'B':9,'B-':8,'C+':7,'C':6,'C-':5,'D+':4,'D':3,'D-':2,'F':0};
+const MIN = {Cm:5, C:6, Bm:8};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const KEY = 'cornell-degree-tracker-v1';
+const DEFAULT = { swim:false, courses:[] }; // no personal data here: index.html is also published as the phone app
+// Course list lives in courses.js (the file Claude updates in GitHub). DEFAULT is only a fallback.
+const CACHE_KEY = 'degree-tracker-cache-v1';
+let CACHED = null; try { CACHED = JSON.parse(localStorage.getItem(CACHE_KEY)||'null'); } catch(e){}
+// On the phone app there is no courses.js: data comes from GitHub (or the last copy cached on the phone).
+const DATA_MISSING = !window.TRACKER_DATA && !CACHED;
+let state = structuredClone(window.TRACKER_DATA || CACHED || DEFAULT);
+// courses.js (from GitHub) is the base. Courses added or removed on this page are kept
+// in this browser as an overlay until Claude saves them to courses.js.
+let BASE = state.courses.slice();
+const OV_KEY = 'degree-tracker-planner-v1';
+let overlay = {add:[], remove:[]};
+try { overlay = Object.assign({add:[],remove:[]}, JSON.parse(localStorage.getItem(OV_KEY)||'{}')); } catch(e){}
+const sameCourse = (a,b) => { const x=parse(a.code), y=parse(b.code); return x.dept===y.dept && x.num===y.num && String(a.term)===String(b.term); };
+function applyOverlay(){
+  // Drop overlay entries that courses.js already reflects
+  overlay.add = overlay.add.filter(a=>!BASE.some(b=>sameCourse(a,b)));
+  overlay.remove = overlay.remove.filter(id=>BASE.some(b=>b.id===id));
+  state.courses = [...BASE.filter(c=>!overlay.remove.includes(c.id)), ...overlay.add];
+  try { localStorage.setItem(OV_KEY, JSON.stringify(overlay)); } catch(e){}
+}
+applyOverlay();
+function save(){ applyOverlay(); }
+function termKeyOf(t){ const m=String(t||'').match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i); if(!m) return -1; return +m[2]*10 + {winter:0,spring:1,summer:2,fall:3}[m[1].toLowerCase()]; }
+/* ---------- GitHub autosave ----------
+   With a fine-grained token (this repo only, Contents: read & write) saved in this browser,
+   the page loads courses.js from GitHub and commits planner changes straight back. */
+const GH = { repo:'clmeranus/degree-tracker', path:'courses.js', branch:'main', KEY:'degree-tracker-gh-token' };
+let ghToken = null; try { ghToken = localStorage.getItem(GH.KEY); } catch(e){}
+let ghSha = null, ghStatus = ghToken ? 'loading' : 'off', ghError = '', ghBusy = false, ghQueued = false;
+const b64enc = str => { const bytes=new TextEncoder().encode(str); let bin=''; bytes.forEach(b=>bin+=String.fromCharCode(b)); return btoa(bin); };
+const b64dec = b64 => new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\n/g,'')), ch=>ch.charCodeAt(0)));
+function serializeData(d){
+  const head = "// Course list for the degree tracker. Updated by Claude and by the page's GitHub autosave (see CLAUDE.md).\n// Keep the object below strict JSON (quoted keys, no comments inside it) so the page can read and rewrite it.\nwindow.TRACKER_DATA = ";
+  const clean = d.courses.map(c=>{ const o={...c}; delete o.local; return '    '+JSON.stringify(o); }).join(',\n');
+  return head + '{\n  "updated": '+JSON.stringify(d.updated)+',\n  "swim": '+JSON.stringify(!!d.swim)+',\n  "courses": [\n'+clean+'\n  ]\n};\n';
+}
+function parseData(text){ return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}')+1)); }
+async function ghFetch(method, body){
+  const url = `https://api.github.com/repos/${GH.repo}/contents/${GH.path}` + (method==='GET'?`?ref=${GH.branch}`:'');
+  const res = await fetch(url, { method, headers:{ 'Authorization':'Bearer '+ghToken, 'Accept':'application/vnd.github+json', 'X-GitHub-Api-Version':'2022-11-28', ...(body?{'Content-Type':'application/json'}:{}) }, body: body?JSON.stringify(body):undefined, cache:'no-store' });
+  if (!res.ok){ const e=new Error('GitHub '+res.status); e.status=res.status; throw e; }
+  return res.json();
+}
+async function ghLoad(){
+  const j = await ghFetch('GET');
+  ghSha = j.sha;
+  const d = parseData(b64dec(j.content));
+  BASE = d.courses; state.updated = d.updated; state.swim = d.swim;
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify(d)); } catch(e){}
+  applyOverlay();
+}
+function ghFail(e){
+  ghStatus='error';
+  ghError = e.status===401 ? 'GitHub rejected the token (it may have expired). Reconnect with a new one.'
+          : e.status===403 || e.status===404 ? "The token can't reach clmeranus/degree-tracker. Check it has this repo and Contents: Read and write."
+          : "Couldn't reach GitHub (offline?). Changes are kept in this browser and will save next time.";
+}
+async function ghInit(){
+  if (!ghToken) return;
+  try { await ghLoad(); ghStatus='synced'; if (overlay.add.length || overlay.remove.length) await ghSave(); }
+  catch(e){ ghFail(e); }
+  render();
+}
+async function ghSave(){
+  if (!ghToken) return;
+  if (ghBusy){ ghQueued=true; return; }
+  ghBusy=true; ghStatus='saving'; render();
+  for (let attempt=0; attempt<2; attempt++){
+    try {
+      if (!ghSha) await ghLoad();
+      const msg = changesText().split('\n').slice(1).map(l=>l.replace(/^- /,'')).join('; ') || 'Update planner';
+      const data = { updated:new Date().toLocaleDateString('en-CA'), swim:state.swim, courses:state.courses };
+      const j = await ghFetch('PUT', { message:'Planner (from page): '+msg, content:b64enc(serializeData(data)), sha:ghSha, branch:GH.branch });
+      ghSha = j.content.sha;
+      BASE = state.courses.map(c=>{ const o={...c}; delete o.local; return o; });
+      state.updated = data.updated; overlay={add:[],remove:[]}; applyOverlay();
+      try { localStorage.setItem(CACHE_KEY, JSON.stringify({updated:data.updated, swim:state.swim, courses:BASE})); } catch(e){}
+      ghStatus='synced'; ghError=''; break;
+    } catch(e){
+      if ((e.status===409 || e.status===422) && attempt===0){ ghSha=null; continue; } // file changed on GitHub: reload and retry
+      ghFail(e); break;
+    }
+  }
+  ghBusy=false; render();
+  if (ghQueued){ ghQueued=false; ghSave(); }
+}
+function ghPanel(){
+  if (!ghToken) return `<div class="gh off"><div><b>Autosave to GitHub is off.</b> Connect a GitHub token once and planner changes will save to GitHub automatically.</div>
+    <div class="gh-row"><input type="password" class="ghTokenInput" placeholder="Paste a fine-grained GitHub token (github_pat_…)" autocomplete="off"><button class="btn primary" data-gh="connect">Connect</button></div>
+    <div class="hint">The token stays in this browser only. Create one at GitHub → Settings → Developer settings → Fine-grained tokens, with access to <b>only</b> clmeranus/degree-tracker and <b>Contents: Read and write</b>.</div></div>`;
+  const label = {loading:'Loading from GitHub…', saving:'Saving to GitHub…', synced:'Autosave on · up to date with GitHub ✓', error:'Autosave problem'}[ghStatus];
+  return `<div class="gh ${ghStatus}"><div><b>${label}</b>${ghStatus==='error'?` ${esc(ghError)}`:''}</div>
+    <div class="gh-row">${ghStatus==='error'?'<button class="btn" data-gh="retry">Try again</button>':''}<button class="btn" data-gh="disconnect">Disconnect</button></div></div>`;
+}
+function futureTerms(){
+  const now=new Date(), y=now.getFullYear(), mo=now.getMonth()+1;
+  const cur = mo>=8 ? y*10+3 : mo>=6 ? y*10+2 : y*10+1;
+  const out=[];
+  for (let yr=2027; yr<=2030; yr++) ['Spring','Summer','Fall'].forEach(s=>{ const t=`${s} ${yr}`; const k=termKeyOf(t); if (k>cur && k<=20301) out.push(t); });
+  return out;
+}
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const esc = s => String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function parse(code){
+  const m = String(code).toUpperCase().trim().match(/^([A-Z&]+)\s*(\d{4})/);
+  return m ? {dept:m[1], num:+m[2]} : {dept:String(code).toUpperCase().split(/\s/)[0], num:0};
+}
+const is = (c, dept, nums) => { const p=parse(c.code); return p.dept===dept && (Array.isArray(nums)? nums.includes(p.num) : p.num===nums); };
+const inList = (c, list) => list.some(s => { const p=parse(s); const q=parse(c.code); return p.dept===q.dept && p.num===q.num; });
+const rank = s => ({done:0, ip:1, plan:2}[s] ?? 3);
+function gradeStr(c){ return String(c.grade||'').trim().toUpperCase(); }
+// Is a course's grade acceptable? In-progress / planned courses are assumed OK (tentative).
+function gradeOK(c, min=0, letterOnly=false){
+  if (c.status !== 'done') return true;
+  const g = gradeStr(c);
+  if (!g) return true; // done but grade not entered yet
+  if (['CR','TR','AP'].includes(g)) return !letterOnly;
+  if (g==='S'||g==='SX') return !letterOnly && min===0;
+  if (g in GR) return GR[g] >= Math.max(min, 2);
+  return false; // U, F, W, INC, etc.
+}
+const passes = c => gradeOK(c, 0, false);
+function tally(list, f){ // returns {done, ip, plan} sums
+  const t={done:0,ip:0,plan:0};
+  list.forEach(c=>{ if(t[c.status]!==undefined) t[c.status]+= f(c); });
+  return t;
+}
+// Fill requirement slots with the best available course (completed first, then in progress, then planned)
+function allocate(slots, courses){
+  const used = new Set(), picked = [], warnings = [];
+  const out = slots.map(slot=>{
+    const cands = courses.filter(c => !used.has(c.id) && slot.match(c, picked));
+    const ok = cands.filter(c => gradeOK(c, slot.min||0, slot.letter));
+    cands.filter(c=>!ok.includes(c)).forEach(c=>warnings.push(`${c.code} (${gradeStr(c)}) doesn't meet the minimum grade for “${slot.label}”.`));
+    ok.sort((a,b)=>rank(a.status)-rank(b.status));
+    const c = ok[0];
+    if (c){ used.add(c.id); picked.push(c); }
+    return {...slot, course:c||null, state:c?c.status:'none'};
+  });
+  return {slots:out, used, warnings:[...new Set(warnings)]};
+}
+function slotTotals(slots){
+  const t={done:0,ip:0,plan:0,n:slots.length};
+  slots.forEach(s=>{ if(t[s.state]!==undefined) t[s.state]++; });
+  return t;
+}
+
+/* ============================================================
+   PROGRAM EVALUATION
+   ============================================================ */
+function evalEcon(cs){
+  const econ = c => parse(c.code).dept==='ECON';
+  const excluded = c => is(c,'ECON',[4997,4998,4999]);
+  const slots = [
+    {label:'ECON 1110 Intro Micro', opts:'B- or better', min:MIN.Bm, letter:true, match:c=>is(c,'ECON',1110) && !c.ext},
+    {label:'ECON 1120 Intro Macro', opts:'B- or better', min:MIN.Bm, letter:true, match:c=>is(c,'ECON',1120) && !c.ext},
+    {label:'ECON 3030 Intermediate Micro', opts:'must be taken at Cornell', min:MIN.Cm, letter:true, match:c=>is(c,'ECON',3030)},
+    {label:'ECON 3040 Intermediate Macro', opts:'must be taken at Cornell', min:MIN.Cm, letter:true, match:c=>is(c,'ECON',3040)},
+    {label:'Statistics', opts:'ECON 3110 or ECON 3130', min:MIN.Cm, letter:true, match:c=>is(c,'ECON',[3110,3130])},
+    {label:'Econometrics', opts:'ECON 3120 or ECON 3140', min:MIN.Cm, letter:true, match:c=>is(c,'ECON',[3120,3140])},
+    ...[1,2,3].map(i=>({label:`4000-level ECON elective ${i}`, opts:'any ECON 4000–4996', min:MIN.Cm, letter:true, match:c=>econ(c)&&!excluded(c)&&parse(c.code).num>=4000&&parse(c.code).num<5000})),
+    ...[1,2,3].map(i=>({label:`ECON elective ${i}`, opts:'3000+ level (max one course from 2400–2999)', min:MIN.Cm, letter:true,
+      match:(c,picked)=>{ if(!econ(c)||excluded(c)) return false; const n=parse(c.code).num;
+        if (n>=3000) return true;
+        if (n>=2400 && n<3000) return !picked.some(p=>{const k=parse(p.code).num; return parse(p.code).dept==='ECON'&&k>=2400&&k<3000;});
+        return false; }}))
+  ];
+  const a = allocate(slots, cs);
+  const pre = [
+    {label:'MATH 1110 Calculus I (C or better)', c: cs.filter(c=>is(c,'MATH',1110)&&gradeOK(c,MIN.C)).sort((x,y)=>rank(x.status)-rank(y.status))[0]},
+    {label:'ECON 1110 (B- or better)', c: a.slots[0].course},
+    {label:'ECON 1120 (B- or better)', c: a.slots[1].course}
+  ];
+  return {slots:a.slots, used:a.used, warnings:a.warnings, pre, totals:slotTotals(a.slots)};
+}
+
+function evalBusiness(cs, econUsed){
+  const STATS = ['AEM 2100','BTRY 3010','BTRY 3080','CEE 3040','CRP 1200','ECON 3110','ECON 3120','ECON 3130','ENGRD 2700','ILRST 2100','ILRST 3080','ILRST 3110','MATH 1710','MATH 4710','MATH 4720','PUBPOL 2100','PUBPOL 2101','PSYCH 2500','SOC 3010','STSCI 2100','STSCI 2150','STSCI 2200','STSCI 3080','STSCI 3110'];
+  const MICRO = ['ECON 1110','ECON 3030','PUBPOL 2000'];
+  const MGMT = ['AEM 1200','HADM 1810','ILRID 1700','NCC 5540'];
+  const MKT  = ['AEM 2400','HADM 2410','NCC 4530','NCC 5530'];
+  const ACCT = ['AEM 2210','HADM 2230','NCC 5500'];
+  const FIN  = ['AEM 2241','AEM 5241','HADM 2250','NCC 5560'];
+  const slots = [
+    {group:'Foundation', label:'Statistics', opts:'e.g. AEM 2100, STSCI 2100, ECON 3110/3120/3130', min:MIN.C, letter:true, match:c=>inList(c,STATS)},
+    {group:'Foundation', label:'Microeconomics', opts:'ECON 1110, ECON 3030, or PUBPOL 2000', min:MIN.C, letter:true, match:c=>inList(c,MICRO)},
+    {group:'Core', label:'Management', opts:MGMT.join(', '), min:MIN.C, letter:true, match:c=>inList(c,MGMT)},
+    {group:'Core', label:'Marketing', opts:MKT.join(', '), min:MIN.C, letter:true, match:c=>inList(c,MKT)},
+    {group:'Core', label:'Financial Accounting', opts:ACCT.join(', '), min:MIN.C, letter:true, match:c=>inList(c,ACCT)},
+    {group:'Core', label:'Finance', opts:FIN.join(', '), min:MIN.C, letter:true, match:c=>inList(c,FIN)}
+  ];
+  const a = allocate(slots, cs);
+  const chosen = a.slots.map(s=>s.course).filter(Boolean);
+  const isJCB = c => ['AEM','HADM','NBA','NCC'].includes(parse(c.code).dept);
+  const meters = [
+    {label:'Total minor credits', need:18, t:tally(chosen, c=>+c.credits||0)},
+    {label:'Credits from the College of Business (AEM, HADM, NBA, NCC)', need:9, t:tally(chosen.filter(isJCB), c=>+c.credits||0)},
+    {label:'Credits taken at Cornell', need:9, t:tally(chosen.filter(c=>!c.ext), c=>+c.credits||0)},
+    {label:'Unique credits not also used for the Econ major', need:12, t:tally(chosen.filter(c=>!econUsed.has(c.id)), c=>+c.credits||0)}
+  ];
+  return {slots:a.slots, warnings:a.warnings, meters, totals:slotTotals(a.slots)};
+}
+
+function evalFashion(cs){
+  const f = c => parse(c.code).dept==='FSAD';
+  const n = c => parse(c.code).num;
+  const slots = [
+    {label:'FSAD 1250 Fashion, Art & Design Thinking', opts:'required', min:MIN.Bm, letter:true, match:c=>is(c,'FSAD',1250)},
+    {label:'Another FSAD 1000-level course', opts:'any FSAD 1000–1999', min:MIN.Bm, letter:true, match:c=>f(c)&&n(c)>=1000&&n(c)<2000},
+    {label:'FSAD 2000/3000-level course 1', opts:'any FSAD 2000–3999', min:MIN.Bm, letter:true, match:c=>f(c)&&n(c)>=2000&&n(c)<4000},
+    {label:'FSAD 2000/3000-level course 2', opts:'any FSAD 2000–3999', min:MIN.Bm, letter:true, match:c=>f(c)&&n(c)>=2000&&n(c)<4000},
+    {label:'FSAD 4000/6000-level course', opts:'any FSAD 4000–4999 or 6000–6999', min:MIN.Bm, letter:true, match:c=>f(c)&&((n(c)>=4000&&n(c)<5000)||(n(c)>=6000&&n(c)<7000))}
+  ];
+  const a = allocate(slots, cs);
+  const chosen = a.slots.map(s=>s.course).filter(Boolean);
+  const meters = [{label:'Total FSAD credits in the minor', need:15, t:tally(chosen, c=>+c.credits||0)}];
+  return {slots:a.slots, warnings:a.warnings, meters, totals:slotTotals(a.slots)};
+}
+
+function evalGrad(cs){
+  const ok = cs.filter(passes);
+  const credits = tally(ok, c=>+c.credits||0);
+  const asCred = tally(ok.filter(c=>c.as), c=>+c.credits||0);
+  const fws = tally(ok.filter(c=>c.fws), ()=>1);
+  const pe = tally(ok.filter(c=>c.pe), ()=>1);
+  // Language: Option 1 = one FLOPI course (3+ cr, at Cornell); Option 2 = 11+ credits in one language at Cornell
+  const flopi = ok.filter(c=>c.flopi && !c.ext && (+c.credits||0)>=3).sort((a,b)=>rank(a.status)-rank(b.status))[0];
+  const byLang = {};
+  ok.filter(c=>c.lang && !c.ext).forEach(c=>{ const d=parse(c.code).dept; (byLang[d] ||= []).push(c); });
+  let bestLang = null, bestT = {done:0,ip:0,plan:0};
+  Object.entries(byLang).forEach(([d,list])=>{ const t=tally(list,c=>+c.credits||0); if(t.done+t.ip+t.plan > bestT.done+bestT.ip+bestT.plan){bestT=t;bestLang=d;} });
+  let lang;
+  if (flopi) lang = {state:flopi.status, text:`Option 1 via ${flopi.code}`};
+  else if (bestLang) {
+    const s = bestT.done>=11?'done':(bestT.done+bestT.ip>=11?'ip':(bestT.done+bestT.ip+bestT.plan>=11?'plan':'partial'));
+    lang = {state:s, text:`Option 2: ${bestLang} — ${bestT.done+bestT.ip+bestT.plan} of 11 credits`, t:bestT};
+  } else lang = {state:'none', text:'Not started — one FLOPI-AS course (2000+ level) or 11 credits in one language'};
+  // Distribution: all 10 categories, across at least 8 courses (A&S/AP-transfer credit can't be used here)
+  const distCourses = ok.filter(c=>c.dist && c.dist.length && !c.ext).sort((a,b)=>rank(a.status)-rank(b.status));
+  const cat = {};
+  DIST.forEach(([k])=>{ const c = distCourses.find(x=>x.dist.includes(k)); cat[k] = c?{state:c.status,course:c}:{state:'none'}; });
+  const distCount = tally(distCourses, ()=>1);
+  return {credits, asCred, fws, pe, lang, cat, distCount, swim:state.swim};
+}
+
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function ring(t, need, size=96){
+  const r = size/2-9, C = 2*Math.PI*r;
+  const f = v => Math.max(0, Math.min(1, v/need));
+  const d=f(t.done), i=f(t.done+t.ip)-d, p=f(t.done+t.ip+t.plan)-d-i;
+  const seg = (frac, off, col) => frac<=0?'':`<circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="12" stroke-dasharray="${frac*C} ${C}" stroke-dashoffset="${-off*C}" transform="rotate(-90 ${size/2} ${size/2})"/>`;
+  return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${Math.round(d*100)} percent complete">
+    <circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--none)" stroke-width="12"/>
+    ${seg(d,0,'var(--done)')}${seg(i,d,'var(--ip)')}${seg(p,d+i,'var(--plan)')}
+  </svg>`;
+}
+function ringBreakdown(t, need){
+  const pct = v => Math.round(Math.max(0, Math.min(1, v/need))*100);
+  const d = pct(t.done), i = Math.min(100-d, pct(t.ip)), p = Math.min(100-d-i, pct(t.plan));
+  const line = (col, n, label) => `<div class="rb"><i style="background:${col}"></i><b>${n}%</b> ${label}</div>`;
+  return `<div class="rbreak">${line('var(--done)',d,'completed')}${line('var(--ip)',i,'in progress')}${line('var(--plan)',p,'planned')}</div>`;
+}
+function bar(t, need, small){
+  const f = v => Math.max(0, Math.min(100, v/need*100));
+  const d=f(t.done), i=f(t.done+t.ip)-d, p=f(t.done+t.ip+t.plan)-d-i;
+  return `<div class="bar${small?' small':''}"><span style="width:${d}%;background:var(--done)"></span><span style="width:${i}%;background:var(--ip)"></span><span style="width:${p}%;background:var(--plan)"></span></div>`;
+}
+const sym = {done:'✓', ip:'◐', plan:'○', none:''};
+const word = {done:'Done', ip:'In progress', plan:'Planned', none:'Needed', partial:'Partial'};
+function slotRow(s){
+  const c = s.course;
+  return `<div class="row"><div class="dot ${s.state}">${sym[s.state]}</div>
+    <div class="lbl"><b>${esc(s.label)}</b><div class="opts">${c?esc(c.code+(c.title?' · '+c.title:'')):esc(s.opts||'')}</div></div>
+    <span class="pill ${s.state}">${word[s.state]}</span></div>`;
+}
+function meterRow(m){
+  const tot = m.t.done+m.t.ip+m.t.plan;
+  return `<div class="meter"><div class="top"><span>${esc(m.label)}</span><span><b>${fmt(m.t.done)}</b>${tot>m.t.done?` <span class="hint">(${fmt(tot)} incl. current/planned)</span>`:''} / ${m.need}</span></div>${bar(m.t,m.need,true)}</div>`;
+}
+const fmt = n => Math.round(n*10)/10;
+function stateOfMeter(t,need){ return t.done>=need?'done':(t.done+t.ip>=need?'ip':(t.done+t.ip+t.plan>=need?'plan':'none')); }
+
+// Semester boundaries on the pace bar follow the credits planned in each semester (My courses).
+// Semesters with nothing planned yet share the remaining credits up to 120 evenly (shown faded).
+function paceSegments(si){
+  const pct = v => Math.max(0, Math.min(100, v/120*100));
+  const cr = list => list.filter(passes).reduce((n,c)=>n+(+c.credits||0),0);
+  const parseT = t => { const m=String(t||'').match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i); return m?{s:m[1].toLowerCase(), y:+m[2]}:null; };
+  // Map each course to a regular semester 1..8; winter goes with the spring after it, summer with the spring before it
+  const semOf = p => { if(!p) return null;
+    if (p.s==='fall') return (p.y-2026)*2+1;
+    if (p.s==='spring'||p.s==='winter') return (p.y-2026)*2;
+    if (p.s==='summer') return (p.y-2026)*2; return null; };
+  const ap = cr(state.courses.filter(c=>!parseT(c.term)));
+  const per = Array(9).fill(0); const has = Array(9).fill(false);
+  state.courses.forEach(c=>{ const k=semOf(parseT(c.term)); if(k>=1&&k<=8){ if(passes(c)) per[k]+=(+c.credits||0); has[k]=true; } });
+  let last = 0; for (let k=1;k<=8;k++) if (has[k]) last=k;
+  const ends = [ap]; let cum = ap;
+  for (let k=1;k<=last;k++){ cum += per[k]; ends[k]=cum; }
+  const remaining = Math.max(0, 120-cum), left = 8-last;
+  for (let k=last+1;k<=8;k++){ ends[k] = cum + remaining*(k-last)/left; }
+  const ticks=[], labels=[];
+  if (ap>0){ ticks.push({x:pct(ap), cls:'semtick', title:`AP / transfer: ${fmt(ap)} credits`}); labels.push({x:pct(ap)/2, cls:'ap', text:'AP', title:`AP / transfer: ${fmt(ap)} credits`}); }
+  for (let k=1;k<=8;k++){
+    const start=ends[k-1], end=ends[k], planned = k<=last;
+    const title = planned ? `Semester ${k}: ${fmt(per[k])} credits planned (through ${fmt(end)})` : `Semester ${k}: nothing planned yet`;
+    if (k<8) ticks.push({x:pct(end), cls: k===si ? 'marker now' : planned ? 'semtick' : 'semtick future', title});
+    else if (k===si) ticks.push({x:pct(end), cls:'marker now', title});
+    labels.push({x:(pct(start)+pct(end))/2, cls:(k===si?'cur':'')+(planned?'':' future'), text:`Sem ${k}`, title});
+  }
+  return {ticks, labels};
+}
+function semesterIndex(d=new Date()){
+  const y=d.getFullYear(), m=d.getMonth()+1;
+  let idx = m>=8 ? (y-2026)*2+1 : (y-2026)*2; // Fall 2026 = 1, Spring 2027 = 2 ...
+  return Math.max(1, Math.min(8, idx));
+}
+
+function render(){
+  const cs = state.courses;
+  const E = evalEcon(cs), B = evalBusiness(cs, E.used), F = evalFashion(cs), G = evalGrad(cs);
+
+  // rings
+  const gradItems = 7, gradDone = [
+    G.credits.done>=120, G.asCred.done>=100, G.fws.done>=2, G.lang.state==='done',
+    DIST.every(([k])=>G.cat[k].state==='done') && G.distCount.done>=8, G.pe.done>=2, G.swim
+  ].filter(Boolean).length;
+  const cards = [
+    {id:'grad', name:'Graduation (A&S)', t:G.credits, need:120, meta:`${fmt(G.credits.done)} of 120 credits`, big:`${gradDone} of ${gradItems} requirement groups complete`},
+    {id:'econ', name:'Economics major', t:E.totals, need:12, meta:`${E.totals.done} of 12 courses`, big:`${E.totals.ip} in progress · ${E.totals.plan} planned`},
+    {id:'bus', name:'Business minor', t:B.totals, need:6, meta:`${B.totals.done} of 6 requirements`, big:`${B.totals.ip} in progress · ${B.totals.plan} planned`},
+    {id:'fash', name:'Fashion Studies minor', t:F.totals, need:5, meta:`${F.totals.done} of 5 courses`, big:`${F.totals.ip} in progress · ${F.totals.plan} planned`}
+  ];
+  document.getElementById('rings').innerHTML = cards.map(k=>`
+    <div class="ringcard" data-jump="${k.id}"><div class="ringcol">${ring(k.t,k.need)}${ringBreakdown(k.t,k.need)}</div><div><h3>${k.name}</h3><div class="meta">${k.meta}</div><div class="big">${k.big}</div></div></div>`).join('');
+
+  // pace
+  const si = semesterIndex(), expected = si*15, have = G.credits.done+G.credits.ip;
+  const pace = paceSegments(si);
+  const onPace = have >= expected - 0.01;
+  document.getElementById('pace').innerHTML = `
+    <h3>Credit pace toward 120 (Class of 2030, 8 semesters)</h3>
+    <div style="position:relative">${bar(G.credits,120)}${pace.ticks.map(t=>`<div class="${t.cls}" style="left:${t.x}%" title="${esc(t.title)}"></div>`).join('')}</div>
+    <div class="semlabels">${pace.labels.map(l=>`<span class="${l.cls}" style="left:${l.x}%" title="${esc(l.title)}">${l.text}</span>`).join('')}</div>
+    <div class="paceline"><span>Semester ${si} of 8 · lines mark the end of each semester using the credits on your plan; faded lines split the rest evenly until you plan those semesters</span>
+    <span>By the end of this semester: <b>${fmt(have)}</b> credits (completed + in progress) vs. <b>${expected}</b> expected ${onPace?'— <span style="color:var(--done);font-weight:600">on pace</span>':`— <span style="color:var(--warn);font-weight:600">${fmt(expected-have)} behind</span>`}</span></div>`;
+
+  // cards
+  const warnHTML = w => w.length?`<div class="warn">${w.map(esc).join('<br>')}</div>`:'';
+  const gradCard = `<div class="card" id="card-grad"><h2>Graduation requirements</h2>
+    <div class="note">College of Arts &amp; Sciences (students entering fall 2020 or later)</div>
+    ${meterRow({label:'Total credits', need:120, t:G.credits})}
+    ${meterRow({label:'Arts & Sciences credits', need:100, t:G.asCred})}
+    ${meterRow({label:'First-Year Writing Seminars', need:2, t:G.fws})}
+    <div class="meter"><div class="top"><span>Language requirement</span><span class="pill ${G.lang.state==='partial'?'none':G.lang.state}">${word[G.lang.state]}</span></div><div class="opts hint">${esc(G.lang.text)}</div></div>
+    <div class="meter"><div class="top"><span>Distribution: all 10 categories</span><span>${DIST.filter(([k])=>G.cat[k].state==='done').length} / 10 done</span></div>
+      <div class="distgrid">${DIST.map(([k,n])=>{const s=G.cat[k].state;const col=s==='none'?'var(--none)':`var(--${s})`;return `<div title="${G.cat[k].course?esc(G.cat[k].course.code):'not yet covered'}"><span class="sq" style="background:${col}"></span>${k} · ${n}</div>`}).join('')}</div></div>
+    ${meterRow({label:'Distribution courses (minimum 8 to cover the 10 categories)', need:8, t:G.distCount})}
+    <div class="info"><b>You need at least 8 different courses</b> to cover all 10 distribution categories. Some courses count for two categories (e.g. ANTHR 1700 covers HST and SCD), but covering all 10 categories still takes at least 8 courses.</div>
+    ${meterRow({label:'Physical Education courses', need:2, t:G.pe})}
+    <div class="meter"><div class="top"><span>Swim test</span><span class="pill ${G.swim?'done':'none'}">${G.swim?'Done':'Needed'}</span></div></div>
+  </div>`;
+  const econCard = `<div class="card" id="card-econ"><h2>Economics major</h2>
+    <div class="note">12 ECON courses, each with a C- or better, taken for a letter grade (no S/U)</div>
+    ${warnHTML(E.warnings)}
+    <h4>To apply: MATH 1110 + both intro courses</h4>
+    ${E.pre.slice(0,1).map(p=>slotRow({label:p.label,course:p.c,state:p.c?p.c.status:'none',opts:''})).join('')}
+    ${E.slots.slice(0,2).map(slotRow).join('')}
+    <h4>Core (take at Cornell)</h4>${E.slots.slice(2,6).map(slotRow).join('')}
+    <h4>Electives</h4>${E.slots.slice(6).map(slotRow).join('')}
+  </div>`;
+  const busCard = `<div class="card" id="card-bus"><h2>Business minor</h2>
+    <div class="note">SC Johnson College of Business · 18+ credits · C or better · letter grade only · a course counts toward only one business minor</div>
+    ${warnHTML(B.warnings)}
+    <h4>Foundation</h4>${B.slots.slice(0,2).map(slotRow).join('')}
+    <h4>Core</h4>${B.slots.slice(2).map(slotRow).join('')}
+    <h4>Credit checks</h4>${B.meters.map(meterRow).join('')}
+    <div class="info">The foundation courses (ECON 1110 and an ECON stats course) will likely also count toward your Econ major. That's why the minor requires 12 credits that aren't double-counted. If you take the four core business courses, you'll have those 12 credits.</div>
+  </div>`;
+  const fashCard = `<div class="card" id="card-fash"><h2>Fashion Studies minor</h2>
+    <div class="note">Dept. of Human Centered Design · FSAD courses only · B- or better · letter grade · 15+ credits</div>
+    ${warnHTML(F.warnings)}
+    ${F.slots.map(slotRow).join('')}
+    <h4>Credit check</h4>${F.meters.map(meterRow).join('')}
+    <div class="info">After your first 1000-level FSAD course, submit the "Intention to Minor" form by emailing fsad-dus@cornell.edu. FSAD courses count toward your 120 credits but <b>not</b> toward your 100 A&amp;S credits.</div>
+  </div>`;
+  document.getElementById('cards').innerHTML = gradCard + econCard + busCard + fashCard;
+
+  // next steps
+  const next = [];
+  E.slots.filter(s=>s.state==='none').slice(0,4).forEach(s=>next.push(`<b>Econ:</b> ${esc(s.label)} <span class="hint">(${esc(s.opts)})</span>`));
+  B.slots.filter(s=>s.state==='none').forEach(s=>next.push(`<b>Business:</b> ${esc(s.label)} <span class="hint">(${esc(s.opts)})</span>`));
+  F.slots.filter(s=>s.state==='none').slice(0,2).forEach(s=>next.push(`<b>Fashion:</b> ${esc(s.label)}`));
+  const missingDist = DIST.filter(([k])=>G.cat[k].state==='none').map(([k])=>k);
+  const distPlanned = G.distCount.done+G.distCount.ip+G.distCount.plan;
+  if (missingDist.length || distPlanned<8) next.push(`<b>Distribution:</b> ${missingDist.length?`still need ${missingDist.join(', ')}. `:''}${distPlanned} of the minimum 8 distribution courses are on your plan.`);
+  if (G.fws.done+G.fws.ip+G.fws.plan<2) next.push('<b>Writing:</b> take a second First-Year Writing Seminar');
+  if (G.lang.state==='none'||G.lang.state==='partial') next.push('<b>Language:</b> take the placement test if you are continuing a language, then plan a FLOPI-AS course or an 11-credit sequence');
+  if (G.pe.done+G.pe.ip+G.pe.plan<2) next.push('<b>PE:</b> two PE courses');
+  if (!G.swim) next.push('<b>Swim test</b>: tell Claude once you have passed it');
+  document.getElementById('next').innerHTML = `<h2>Still to plan</h2><div class="note">Requirements with no completed, in-progress or planned course yet. Tell Claude about courses you plan to take to fill these in.</div><ul class="nextlist">${next.slice(0,20).map(x=>`<li>${x}</li>`).join('')}</ul>`;
+
+  document.querySelectorAll('[data-jump]').forEach(el=>el.onclick=()=>document.getElementById('card-'+el.dataset.jump).scrollIntoView({behavior:'smooth'}));
+
+  document.getElementById('connectTop').innerHTML = (!window.TRACKER_DATA && ghStatus!=='synced' && ghStatus!=='saving') ? ghPanel() : '';
+  renderCourses(E,B,F);
+  renderSuggestions(E,B,F,G);
+  document.getElementById('dataInfo').innerHTML = DATA_MISSING
+    ? (ghStatus==='synced'||ghStatus==='saving' ? `Course list last updated <b>${esc(state.updated||'—')}</b> · source: <b>GitHub (live)</b>` : '<b>Your courses load from GitHub.</b> Connect your token at the bottom of this page.')
+    : `Course list last updated <b>${esc(state.updated||'—')}</b> · swim test: <b>${state.swim?'passed':'not yet'}</b> · source: <b>${ghStatus==='synced'||ghStatus==='saving'?'GitHub (live)':window.TRACKER_DATA?'local courses.js file':'saved copy on this device (offline)'}</b>`;
+}
+
+function termKey(t){
+  const m = String(t||'').match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i);
+  if (!m) return /ap|transfer/i.test(t)?-1:99999;
+  const order = {winter:0,spring:1,summer:2,fall:3};
+  return +m[2]*10 + order[m[1].toLowerCase()];
+}
+function renderCourses(E,B,F){
+  const usedBy = id => {
+    const out=[];
+    if (E.slots.some(s=>s.course&&s.course.id===id)) out.push('Econ');
+    if (B.slots.some(s=>s.course&&s.course.id===id)) out.push('Business');
+    if (F.slots.some(s=>s.course&&s.course.id===id)) out.push('Fashion');
+    return out;
+  };
+  const card = c => {
+    const prog = usedBy(c.id);
+    const tags = [...(c.dist||[]).map(d=>d+'-AS'), c.fws&&'FWS', c.flopi&&'FLOPI', c.lang&&'Language', c.pe&&'PE', c.as?'A&S credit':'non-A&S', c.ext&&'AP/transfer'].filter(Boolean);
+    return `<div class="ccard ${c.status}">
+      <div class="top"><span class="code">${esc(c.code)}</span><span class="pill ${c.status}">${word[c.status]}</span></div>
+      <div class="t">${esc(c.title)}</div>
+      <div class="meta">${enrolled(c)!==(+c.credits||0)?`${esc(enrolled(c))} cr enrolled · ${esc(c.credits)} toward degree`:`${esc(c.credits)} cr`} · Grade: <b>${esc(c.grade||'—')}</b></div>
+      <div class="tags">${c.local?'<span class="tag local">Added on this page</span>':''}${prog.map(t=>`<span class="tag prog">${esc(t)}</span>`).join('')}${tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>
+      ${c.status==='plan'?`<button class="rm" data-remove="${esc(c.id)}">Remove from plan</button>`:''}
+    </div>`;
+  };
+  const byCode = (a,b)=>a.code.localeCompare(b.code);
+  const crSum = list => fmt(list.reduce((n,c)=>n+(+c.credits||0),0));
+  const enrolled = c => c.enrolled!=null ? +c.enrolled : (+c.credits||0);
+  const enSum = list => fmt(list.reduce((n,c)=>n+enrolled(c),0));
+  const crLabel = list => { const d=crSum(list), e=enSum(list); return e!==d ? `${e} enrolled · ${d} toward degree` : `${d} cr`; };
+  const parseTerm = t => { const m=String(t||'').match(/(Spring|Summer|Fall|Winter)\s*(\d{4})/i); return m?{season:m[1][0].toUpperCase()+m[1].slice(1).toLowerCase(), year:+m[2]}:null; };
+
+  // Academic years: Fall Y, Winter Y+1, Spring Y+1, Summer Y+1
+  const years = [2026,2027,2028,2029];
+  const buckets = {}; const ap = []; const other = [];
+  state.courses.forEach(c=>{
+    const p = parseTerm(c.term);
+    if (!p){ (/ap|transfer/i.test(c.term)?ap:other).push(c); return; }
+    const ay = p.season==='Fall' ? p.year : p.year-1;
+    if (!years.includes(ay)){ other.push(c); return; }
+    (buckets[`${ay}-${p.season}`] ||= []).push(c);
+  });
+  const si = semesterIndex();
+  let html = '';
+  if (ap.length) html += `<div class="sem ap cal-ap"><div class="sem-h">AP / transfer credit <span class="cr">${crLabel(ap)}</span></div><div class="ap-row">${ap.sort(byCode).map(card).join('')}</div></div>`;
+  years.forEach((y,i)=>{
+    const seasons = ['Fall', buckets[`${y}-Winter`]&&'Winter', 'Spring', buckets[`${y}-Summer`]&&'Summer'].filter(Boolean);
+    html += `<div class="cal-year" style="--cols:${seasons.length}"><div class="cal-ylabel">Year ${i+1}<span>${y}–${String(y+1).slice(2)}</span></div>`;
+    seasons.forEach(season=>{
+      const calYear = season==='Fall'?y:y+1;
+      const list = (buckets[`${y}-${season}`]||[]).sort(byCode);
+      const semNo = season==='Fall'? i*2+1 : season==='Spring'? i*2+2 : null;
+      html += `<div class="sem${semNo===si?' now':''}"><div class="sem-h">${season} ${calYear}${semNo?` · Sem ${semNo}`:''}<span class="cr">${list.length?crLabel(list):''}</span></div>
+        ${list.length?list.map(card).join(''):'<div class="sem-empty">No courses yet</div>'}</div>`;
+    });
+    html += `</div>`;
+  });
+  if (other.length) html += `<div class="sem cal-ap"><div class="sem-h">Other / no semester set</div><div class="ap-row">${other.sort(byCode).map(card).join('')}</div></div>`;
+  html += `<p class="hint">Red tags show which program a course is counting toward. "Enrolled" matches Cornell's scheduler; "toward degree" leaves out PE, which doesn't count toward the 120 credits.</p>`;
+  const nChanges = overlay.add.length + overlay.remove.length;
+  const banner = (nChanges && ghStatus!=='saving' ? `<div class="pending"><div><b>${nChanges} planner change${nChanges>1?'s':''} saved in this browser only.</b> They already count on the Progress page. To save them to GitHub, click <b>Copy changes for Claude</b> and paste the text into your chat with Claude.</div>
+    <div class="pending-btns"><button class="btn primary" id="copyChanges">Copy changes for Claude</button><button class="btn" id="undoChanges">Undo all</button></div>
+    <textarea id="changesText" readonly>${esc(changesText())}</textarea></div>` : '');
+  document.getElementById('courseTable').innerHTML = banner + html + `<div class="gh-bottom">${ghPanel()}</div>`;
+}
+function changesText(){
+  const lines = ['Please update my degree tracker with these planner changes:'];
+  overlay.add.forEach(c=>lines.push(`- Add (planned, ${c.term}): ${c.code} ${c.title}, ${c.credits} cr${c.dist&&c.dist.length?', '+c.dist.map(d=>d+'-AS').join(', '):''}`));
+  overlay.remove.forEach(id=>{ const c=BASE.find(b=>b.id===id); if(c) lines.push(`- Remove planned course: ${c.code} (${c.term})`); });
+  return lines.join('\n');
+}
+function removePlanned(id){
+  const c = state.courses.find(x=>x.id===id);
+  if (!c || c.status!=='plan') return;
+  if (!confirm(`Remove ${c.code} (${c.term}) from your plan?`)) return;
+  if (c.local) overlay.add = overlay.add.filter(a=>a.id!==id);
+  else overlay.remove.push(id);
+  save(); render(); ghSave();
+}
+function addSuggestion(code, term){
+  const sg = (window.SUGGESTIONS?.courses||[]).find(x=>x.code===code);
+  if (!sg || !term) return;
+  const dept = parse(sg.code).dept;
+  const c = { id:'pl-'+sg.code.replace(/\s+/g,'').toLowerCase()+'-'+term.replace(/\s+/g,'').toLowerCase(),
+    code:sg.code, title:sg.title, credits: parseFloat(sg.credits)||0, status:'plan', grade:'', term,
+    dist:(sg.dist||[]).slice(), as:!NON_AS_PREFIX.includes(dept), fws:false, flopi:false, lang:false, pe:false, ext:false, local:true };
+  if (state.courses.some(x=>sameCourse(x,c))) return;
+  overlay.add.push(c); save(); render(); ghSave();
+  flash(`${sg.code} added to ${term}.${ghToken?' Saving to GitHub…':' It now counts on the Progress page.'}`);
+}
+function flash(msg){
+  let el=document.getElementById('toast'); if(!el){ el=document.createElement('div'); el.id='toast'; document.body.appendChild(el); }
+  el.textContent=msg; el.className='show'; clearTimeout(el._t); el._t=setTimeout(()=>el.className='',3200);
+}
+document.addEventListener('click', e=>{
+  const rm = e.target.closest('[data-remove]'); if (rm){ removePlanned(rm.dataset.remove); return; }
+  const add = e.target.closest('[data-add]'); if (add){ const sel=add.parentElement.querySelector('select'); addSuggestion(add.dataset.add, sel&&sel.value); return; }
+  if (e.target.id==='copyChanges'){
+    const ta=document.getElementById('changesText'); const txt=ta.value;
+    const done=()=>{ e.target.textContent='Copied ✓'; setTimeout(()=>e.target.textContent='Copy changes for Claude',2000); };
+    (navigator.clipboard?navigator.clipboard.writeText(txt):Promise.reject()).then(done).catch(()=>{ ta.select(); try{document.execCommand('copy');done();}catch(_){} });
+    return;
+  }
+  if (e.target.dataset.gh==='connect'){
+    const v=(e.target.closest('.gh').querySelector('.ghTokenInput').value||'').trim(); if(!v) return;
+    ghToken=v; try{localStorage.setItem(GH.KEY,v);}catch(_){} ghStatus='loading'; render(); ghInit(); return;
+  }
+  if (e.target.dataset.gh==='disconnect'){ if(confirm('Turn off autosave and forget the GitHub token in this browser?')){ try{localStorage.removeItem(GH.KEY);}catch(_){} ghToken=null; ghStatus='off'; render(); } return; }
+  if (e.target.dataset.gh==='retry'){ ghStatus='loading'; render(); ghInit(); return; }
+  if (e.target.id==='undoChanges'){ if (confirm('Undo all planner changes made on this page?')){ overlay={add:[],remove:[]}; save(); render(); } }
+});
+
+/* ============================================================
+   SUGGESTIONS — a suggestion affects progress only after it's added to the planner.
+   ============================================================ */
+function renderSuggestions(E,B,F,G){
+  const box = document.getElementById('suggest');
+  const data = window.SUGGESTIONS;
+  if (!data){ box.innerHTML = '<div class="warn">suggestions.js wasn\'t found. Keep it in the same folder as index.html.</div>'; return; }
+  const distName = Object.fromEntries(DIST);
+  // Which requirement keys are still open (no completed, in-progress or planned course)
+  const open = new Set();
+  DIST.forEach(([k])=>{ if (G.cat[k].state==='none') open.add('dist:'+k); });
+  if (E.slots[2].state==='none') open.add('econ:3030');
+  if (E.slots[5].state==='none') open.add('econ:metrics');
+  const n4000 = E.slots.slice(6,9).filter(x=>x.state==='none').length;
+  const nElec = E.slots.slice(9).filter(x=>x.state==='none').length;
+  if (n4000) open.add('econ:4000');
+  if (nElec) open.add('econ:elective');
+  B.slots.forEach(x=>{ if (x.state==='none') open.add('bus:'+x.label); });
+  const fk = ['fash:1250','fash:1000','fash:2000','fash:2000','fash:4000'];
+  F.slots.forEach((x,i)=>{ if (x.state==='none') open.add(fk[i]); });
+
+  const label = k => {
+    const [g,v] = k.split(':');
+    if (g==='dist') return `${v} · ${distName[v]}`;
+    return ({'econ:3030':'Econ core: ECON 3030','econ:metrics':'Econ core: Econometrics','econ:4000':`Econ: 4000-level electives (${n4000} still needed)`,'econ:elective':`Econ: other electives (${nElec} still needed)`,
+             'bus:Marketing':'Business: Marketing','bus:Financial Accounting':'Business: Financial Accounting','bus:Finance':'Business: Finance',
+             'fash:1250':'Fashion: FSAD 1250','fash:1000':'Fashion: another 1000-level FSAD','fash:2000':'Fashion: 2000/3000-level FSAD','fash:4000':'Fashion: 4000/6000-level FSAD'})[k]||k;
+  };
+  const shortLabel = k => { const [g,v]=k.split(':'); return g==='dist'? v+'-AS' : label(k).replace(/ \(.*\)$/,''); };
+  const taken = new Set(state.courses.map(c=>{const p=parse(c.code);return p.dept+' '+p.num;}));
+  const avail = data.courses.filter(c=>{const p=parse(c.code); return !taken.has(p.dept+' '+p.num);});
+  const hits = c => c.fills.filter(k=>open.has(k));
+  const terms = futureTerms();
+  const card = c => { const h = hits(c);
+    return `<div class="sg${h.length>1?' multi':''}"><div class="code">${esc(c.code)} <span class="hint">· ${esc(c.credits)} cr</span></div><div class="t">${esc(c.title)}</div>
+      <div class="tags">${h.map(k=>`<span class="tag hit">${esc(shortLabel(k))}</span>`).join('')}</div>
+      ${c.note?`<div class="n">${esc(c.note)}</div>`:''}
+      <div class="sg-add"><select aria-label="Semester">${terms.map(t=>`<option${t===terms.find(x=>!/Summer/.test(x))?' selected':''}>${t}</option>`).join('')}</select><button class="btn small" data-add="${esc(c.code)}">Add to planner</button></div></div>`; };
+
+  const groups = [
+    ['Distribution requirements', 'dist', 'Categories with no completed, in-progress or planned course yet.'],
+    ['Economics major', 'econ', 'Requirements with no course on your plan yet.'],
+    ['Business minor', 'bus', ''],
+    ['Fashion Studies minor', 'fash', 'FSAD courses give enrollment preference to Fashion Studies minors once you submit the Intention to Minor form.']
+  ];
+  const multi = avail.filter(c=>hits(c).length>1);
+  const distPlanned = G.distCount.done+G.distCount.ip+G.distCount.plan;
+  let html = `<div class="sg-banner"><b>These are ideas only and don't count toward your progress</b> until you add one to your planner. Pick a semester and click <b>Add to planner</b>; the course moves to My courses as planned and starts counting on the Progress page. Credits marked * weren't confirmed; check the Class Roster for when each course runs.</div>`;
+  if (multi.length) html += `<div class="sg-group"><h3>Best value: courses that cover two open requirements</h3><div class="note">Green borders mark courses that fill more than one thing you still need.</div><div class="sg-list">${multi.map(card).join('')}</div></div>`;
+  groups.forEach(([title,g,note])=>{
+    const keys = [...open].filter(k=>k.startsWith(g+':'));
+    if (!keys.length){ html += `<div class="sg-group"><h3>${title}</h3><div class="note">Everything here already has a course on your plan.</div></div>`; return; }
+    let extra = '';
+    if (g==='dist') extra = ` You have ${distPlanned} of the minimum 8 distribution courses on your plan.`;
+    if (g==='bus' || g==='fash') extra += ' These are not A&S credit. Arts & Sciences allows only 20 of your 120 credits from outside the college, so the two minors together likely need a few credits beyond 120.';
+    html += `<div class="sg-group"><h3>${title}</h3><div class="note">${note}${extra}</div>`;
+    keys.forEach(k=>{
+      const list = avail.filter(c=>c.fills.includes(k));
+      html += `<div class="sg-req">${esc(label(k))}</div>${list.length?`<div class="sg-list">${list.map(card).join('')}</div>`:'<div class="hint">No suggestions yet. Ask Claude for some.</div>'}`;
+    });
+    html += `</div>`;
+  });
+  html += `<p class="hint">Suggestions last checked ${esc(data.checked)} against Cornell's catalog and Class Roster. Ask Claude to refresh them anytime.</p>`;
+  box.innerHTML = html;
+}
+
+/* ============================================================
+   FORM
+   ============================================================ */
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.toggle('on',x===b));
+  ['dash','courses','suggest','about'].forEach(t=>document.getElementById('tab-'+t).classList.toggle('hidden', t!==b.dataset.tab));
+});
+
+/* ============================================================
+   ABOUT
+   ============================================================ */
+document.getElementById('about').innerHTML = `
+  <h2>How this tracker reads the rules</h2>
+  <div class="note">Requirements are from Cornell's official pages as of November 2026. Your DUST report, the Econ department and the minor offices are the official record. Check with them before relying on this tracker.</div>
+  <h4>Arts &amp; Sciences graduation</h4>
+  <ul>
+    <li>120 credits total, at least 100 of them in Arts &amp; Sciences.</li>
+    <li>Two First-Year Writing Seminars. Your AP credit covers one of them.</li>
+    <li>Language: <b>Option 1</b> is one FLOPI-AS course of 3+ credits at the 2000 level or above, taken at Cornell. <b>Option 2</b> is 11+ credits in one language taken in sequence at Cornell. AP scores can place you but don't fulfill the requirement.</li>
+    <li>Distribution: at least 8 courses that together cover all 10 categories. Distribution courses can be taken S/U unless they're also counting toward a major or minor. This tracker doesn't count AP or transfer credit toward distribution.</li>
+    <li>Two PE courses and the swim test.</li>
+  </ul>
+  <h4>Economics major</h4>
+  <ul>
+    <li>12 ECON courses, each with a C- or better (no S/U). ECON 1110 and 1120 need a B- or better and count toward the 12.</li>
+    <li>Core: ECON 3030, ECON 3040, statistics (ECON 3110 or 3130) and econometrics (ECON 3120 or 3140). All four must be taken at Cornell.</li>
+    <li>At least three ECON courses at the 4000 level. At most one course from the 2400–2999 range. ECON 4997, 4998 and 4999 don't count.</li>
+    <li>To apply to the major, you need MATH 1110 with a C or better (your AP credit covers it), plus ECON 1110 and 1120 with a B- or better.</li>
+  </ul>
+  <h4>Business minor (SC Johnson College of Business)</h4>
+  <ul>
+    <li>18 credits total. Foundation: one statistics course and one microeconomics course. Core: one course each in management, marketing, financial accounting and finance.</li>
+    <li>At least 9 credits must be taken at Cornell, and at least 9 must be AEM, HADM, NBA or NCC courses. At least 12 credits can't overlap with your major's core requirements.</li>
+    <li>Letter grade of C or better required. You can sign up as early as your first year and no later than your 6th semester, through the Business Minors Dashboard.</li>
+  </ul>
+  <h4>Fashion Studies minor (Human Centered Design)</h4>
+  <ul>
+    <li>Cornell doesn't offer a minor called "Fashion Design." The minor open to non-FSAD majors is <b>Fashion Studies</b>, and that's what this tracker follows.</li>
+    <li>Requirements: FSAD 1250, one more FSAD course at the 1000 level, two FSAD courses at the 2000/3000 level and one FSAD course at the 4000/6000 level. That's 15+ credits, with only FSAD courses counting.</li>
+    <li>Each course needs a B- or better for a letter grade. The catalog web page says "B or better," but the official PDF says B-. Confirm with fsad-dus@cornell.edu.</li>
+    <li>There's no assigned advisor, so you're responsible for tracking the minor yourself. Submit the graduation application by March 15 of your final semester.</li>
+  </ul>
+  <h4>Sources</h4>
+  <ul>
+    <li><a href="https://as.cornell.edu/education/degree-requirements" target="_blank">A&amp;S Degree Requirements</a></li>
+    <li><a href="https://catalog.cornell.edu/programs/economics-ba/" target="_blank">Economics (BA) — Cornell Catalog</a> · <a href="https://economics.cornell.edu/major" target="_blank">Econ department major page</a></li>
+    <li><a href="https://courses.cornell.edu/programs/business-minor/business-minor.pdf" target="_blank">Business Minor — Cornell Catalog (PDF)</a> · <a href="https://business.cornell.edu/programs/undergraduate/minors/business" target="_blank">Business minor site</a></li>
+    <li><a href="https://courses.cornell.edu/programs/fashion-studies-minor/fashion-studies-minor.pdf" target="_blank">Fashion Studies Minor — Cornell Catalog (PDF)</a></li>
+  </ul>`;
+
+render();
+ghInit();
+if ('serviceWorker' in navigator && location.protocol==='https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
