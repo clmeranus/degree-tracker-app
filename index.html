@@ -25,6 +25,7 @@
   header .sub{opacity:.85;font-size:13px;margin-top:2px}
   nav{display:flex;gap:4px;margin-top:16px}
   nav button{background:transparent;border:0;color:#fff;opacity:.75;padding:10px 16px;font:inherit;font-weight:600;cursor:pointer;border-radius:8px 8px 0 0}
+  nav button svg, nav button .short{display:none}
   nav button.on{background:var(--bg);color:var(--red);opacity:1}
   main{max-width:1180px;margin:0 auto;padding:24px 20px 60px}
   .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:var(--muted);margin:0 0 16px}
@@ -160,18 +161,30 @@
   .src a{color:var(--plan)}
   header{padding-top:calc(22px + env(safe-area-inset-top))}
   @media (max-width:600px){
-    header{padding:calc(14px + env(safe-area-inset-top)) 14px 0}
-    header h1{font-size:19px} header .sub{font-size:11.5px}
-    nav{overflow-x:auto;gap:2px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
-    nav button{padding:9px 11px;font-size:14px;white-space:nowrap}
-    main{padding:16px 12px calc(40px + env(safe-area-inset-bottom))}
-    .rings{grid-template-columns:1fr 1fr;gap:10px}
-    .ringcard{flex-direction:column;align-items:flex-start;padding:12px;gap:8px}
+    /* smaller header: title only */
+    header{padding:calc(10px + env(safe-area-inset-top)) 16px 10px;position:sticky;top:0;z-index:5}
+    header h1{font-size:17px;text-align:center}
+    header .sub{display:none}
+    /* bottom tab bar */
+    nav{position:fixed;left:0;right:0;bottom:0;margin:0;z-index:10;display:grid;grid-template-columns:repeat(4,1fr);gap:0;
+        background:rgba(255,255,255,.96);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+        border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+    nav button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:4px 2px;border-radius:10px;
+        color:var(--muted);opacity:1;font-size:10.5px;font-weight:600;background:none}
+    nav button svg{display:block;width:24px;height:24px}
+    nav button .full{display:none} nav button .short{display:block}
+    nav button.on{background:none;color:var(--red)}
+    main{padding:14px 12px calc(84px + env(safe-area-inset-bottom))}
+    /* one progress chart per row */
+    .rings{grid-template-columns:1fr;gap:10px}
+    .ringcard{flex-direction:row;align-items:center;padding:14px 16px;gap:16px}
+    .ringcard h3{font-size:16px}
     .grid{grid-template-columns:1fr}
     .card{padding:14px 14px 10px}
     .semlabels{font-size:9.5px}
     .paceline{flex-direction:column;gap:4px}
     .sg-list{grid-template-columns:1fr}
+    #toast{bottom:calc(84px + env(safe-area-inset-bottom))}
   }
   @media (max-width:600px){.fg,.checks,.distgrid{grid-template-columns:1fr}}
 </style>
@@ -181,10 +194,10 @@
   <h1>Degree Tracker</h1>
   <div class="sub">College of Arts &amp; Sciences · Class of 2030 · Economics major · Business minor · Fashion Studies minor</div>
   <nav>
-    <button data-tab="dash" class="on">Progress</button>
-    <button data-tab="courses">My courses</button>
-    <button data-tab="suggest">Suggestions</button>
-    <button data-tab="about">Rules &amp; sources</button>
+    <button data-tab="dash" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2.2" opacity=".35"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span class="full">Progress</span><span class="short">Progress</span></button>
+    <button data-tab="courses"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span class="full">My courses</span><span class="short">Courses</span></button>
+    <button data-tab="suggest"><svg viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span class="full">Suggestions</span><span class="short">Suggestions</span></button>
+    <button data-tab="about"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 11v5.5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="7.8" r="1.3" fill="currentColor"/></svg><span class="full">Rules &amp; sources</span><span class="short">Rules</span></button>
   </nav>
 </header>
 
